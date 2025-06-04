@@ -1,32 +1,38 @@
 <?php
 include("config.php");
 session_start();
-//get parameter
 
-$url=$_POST['url'];
+header("X-Frame-Options: DENY"); // Clickjacking 방지
+
+//get parameter
+$url = mysqli_real_escape_string($db, $_POST['url']);
+$csrf = mysqli_real_escape_string($db, $_POST['csrf_token']);
 
 //check session else redirect to login page
-
-$check=$_SESSION['login_user'];
+$check = $_SESSION['login_user'];
 if($check==NULL )
 {
-	header("Location: /vulnerable/index.html");
+	header("Location: /index.php");
 }
 
 
 //check values else redirect to settings page
 if($check!=NULL && $url==NULL  )
 {
-header("Location: /vulnerable/settings.php");	
+header("Location: /settings.php");	
 }
 
-echo "<h1>Result from Vulnerable server</h1>";
+// CSRF 확인
+if ($_SESSION['csrf'] == $csrf) {
 
-echo system("ping $url");
+  echo "<h1>Result from Secure server</h1>";
+
+  // echo system("ping $url"); // 명령어 해크할 수 있다
+  echo system(escapeshellcmd("ping $url"));
+
+} else {
+  echo "<h2>CSRF detected... Get out of here!</h2>";
+}
+
 ?>
-<script>
-if(top != window) {
-  top.location = window.location
-}
 
-</script>
